@@ -1,0 +1,7 @@
+# Input - GITHUB Branch and Credentials/token
+
+# Checkout branch
+
+# Deploy aws-hasura-serverless-backend and get output apollo-serverless & aurora postgress endpoints
+
+# Deploy hasura source after configuring hasura with remote-schema and db

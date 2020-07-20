@@ -162,7 +162,6 @@ resources:
         DBInstanceClass : db.t3.medium
         Engine : aurora-postgresql
         EngineVersion: 11.7
-        Iops : 1000
         MasterUsername : ${self:custom.dbUserName}
         MasterUserPassword : ${self:custom.dbPassword}
         DBInstanceIdentifier: tellaboutdbinstance-#{AWS::AccountId}-${self:custom.currentStage}

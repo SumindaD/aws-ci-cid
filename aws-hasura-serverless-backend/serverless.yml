@@ -155,12 +155,33 @@ resources:
           - !Ref PublicSubnetA
           - !Ref PublicSubnetB
 
+    RDSCluster:
+      Type: "AWS::RDS::DBCluster"
+      Properties:
+        Engine: aurora-postgresql
+        EngineVersion: 11.7
+        MasterUsername: "root123"
+        MasterUserPassword: "rootatabout1234"         
+        DBClusterParameterGroupName: 
+          Ref: RDSDBClusterParameterGroup
+        DBSubnetGroupName: 
+          Ref: DBSubnetGroup
+
+    RDSDBClusterParameterGroup: 
+      Type: "AWS::RDS::DBClusterParameterGroup"
+      Properties: 
+        Description: "CloudFormation Sample Aurora Cluster Parameter Group"
+        Family: aurora-postgresql11
+        Parameters:
+            "LOGGING_LEVEL": "INFO"  #this is where the error pops up
+
     RDSDatabase:
       Type: AWS::RDS::DBInstance
       Properties:
         AllocatedStorage: 100
         DBInstanceClass : db.t3.medium
         Engine : aurora-postgresql
+        DBClusterIdentifier: !Ref RDSCluster
         EngineVersion: 11.7
         MasterUsername : ${self:custom.dbUserName}
         MasterUserPassword : ${self:custom.dbPassword}

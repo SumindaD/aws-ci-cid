@@ -2,6 +2,6 @@
 
 # Checkout branch
 
-# Deploy aws-hasura-serverless-backend and get output apollo-serverless & aurora postgress endpoints
+# Deploy aws-hasura-serverless-backend and get output apollo-serverless & aurora postgress connection string
 
 # Deploy hasura source after configuring hasura with remote-schema and db

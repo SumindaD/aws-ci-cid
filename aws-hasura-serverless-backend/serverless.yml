@@ -6,8 +6,9 @@ custom:
   vpcName : vpc-#{AWS::AccountId}-${self:custom.currentStage}
   publicSubnetAName: publicsubnet-a-#{AWS::AccountId}-${self:custom.currentStage}
   publicSubnetBName: publicsubnet-b-#{AWS::AccountId}-${self:custom.currentStage}
-  dbUserName: sa
+  dbUserName: postgres
   dbPassword: TellAbout2020!
+  dbName: tellaboutdb#{AWS::AccountId}${self:custom.currentStage}
 
 provider:
   name: aws
@@ -129,8 +130,8 @@ resources:
             ToPort: 443
             CidrIp: 0.0.0.0/0
           - IpProtocol: tcp
-            FromPort: 3306
-            ToPort: 3306
+            FromPort: 5432
+            ToPort: 5432
             CidrIp: 0.0.0.0/0
         SecurityGroupEgress:
           - IpProtocol: tcp
@@ -142,8 +143,8 @@ resources:
             ToPort: 443
             CidrIp: 0.0.0.0/0
           - IpProtocol: tcp
-            FromPort: 3306
-            ToPort: 3306
+            FromPort: 5432
+            ToPort: 5432
             CidrIp: 0.0.0.0/0
 
     DBSubnetGroup:
@@ -155,17 +156,50 @@ resources:
           - !Ref PublicSubnetA
           - !Ref PublicSubnetB
 
+    RDSDBClusterParameterGroup: 
+      Type: AWS::RDS::DBClusterParameterGroup
+      Properties: 
+        Description: tellaboutdbclusterparametergroup-#{AWS::AccountId}-${self:custom.currentStage}
+        Family: aurora-postgresql11
+        Parameters:
+            rds.force_ssl: 1
+
+    RDSCluster:
+      Type: AWS::RDS::DBCluster
+      Properties:
+        Engine: aurora-postgresql
+        EngineVersion: 11.7
+        Port: 5432
+        DatabaseName: ${self:custom.dbName}
+        MasterUsername: ${self:custom.dbUserName}
+        MasterUserPassword: ${self:custom.dbPassword}
+        DBClusterParameterGroupName: 
+          Ref: RDSDBClusterParameterGroup
+        DBSubnetGroupName: 
+          Ref: DBSubnetGroup
+        VpcSecurityGroupIds:
+          - !Ref SecurityGroup
+
     RDSDatabase:
       Type: AWS::RDS::DBInstance
       Properties:
-        AllocatedStorage: 100
         DBInstanceClass : db.t3.medium
         Engine : aurora-postgresql
+        DBClusterIdentifier: !Ref RDSCluster
         EngineVersion: 11.7
-        MasterUsername : ${self:custom.dbUserName}
-        MasterUserPassword : ${self:custom.dbPassword}
         DBInstanceIdentifier: tellaboutdbinstance-#{AWS::AccountId}-${self:custom.currentStage}
-        DBName: ${self:custom.dbName}
-        VPCSecurityGroups:
-          - !Ref SecurityGroup
-        DBSubnetGroupName: !Ref DBSubnetGroup
+        PubliclyAccessible: true
+
+  Outputs:
+    PostgresURL:
+      Description: 'Postgress database connection string'
+      Value: !Join
+             - ''
+             - - 'postgresql://'
+               - ${self:custom.dbUserName}
+               - ':'
+               - ${self:custom.dbPassword}
+               - '@'
+               - !GetAtt RDSCluster.Endpoint.Address
+               - '/'
+               - ${self:custom.dbName}
